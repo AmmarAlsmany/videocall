@@ -22,6 +22,7 @@ const VideoWall = ({
         <div className="flex space-x-2">
           <img src={powerButtonIcon} alt="Power" className="img-fluid cursor-pointer" />
           <img src={largeScreenIcon} alt="Large Screen" className="img-fluid cursor-pointer" />
+          
         </div>
         <div className="text-right">
           <h3 className="text-[#A3A5A7] text-lg font-bold">Video Wall</h3>
