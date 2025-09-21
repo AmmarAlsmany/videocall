@@ -88,7 +88,7 @@ const VideoWall = ({
               src={image.src}
               alt={image.name}
               className="w-full h-full select-none pointer-events-none"
-              style={{ objectFit: "contain" }}
+              style={{ objectFit: "cover" }}
               draggable={false}
             />
 
