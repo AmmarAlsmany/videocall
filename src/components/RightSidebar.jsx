@@ -25,7 +25,7 @@ function RightSidebar() {
   return (
     <div className="w-20 bg-black rounded-xl flex flex-col items-center justify-between py-4 h-full mr-1">
       {/* Link Icon - Top */}
-      <div className="w-12 h-12 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer" title="Link">
+      <div className="w-12 h-12 flex items-center justify-center hover:bg-green-500 transition-colors cursor-pointer rounded-full" title="Link">
         <img 
           src={linkIcon} 
           alt="Link" 
@@ -38,7 +38,7 @@ function RightSidebar() {
         {middleButtons.map((button, index) => (
           <div
             key={index}
-            className="w-12 h-12 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+            className="w-12 h-12 flex items-center justify-center hover:bg-green-500 transition-colors cursor-pointer rounded-full"
             title={button.label}
           >
             <img 
@@ -52,7 +52,7 @@ function RightSidebar() {
       
       {/* Save Preset Button - Bottom */}
       <div className="flex flex-col items-center">
-        <div className="w-12 h-12 flex items-center justify-center mb-2">
+        <div className="w-12 h-12 flex items-center justify-center mb-2 hover:bg-green-500 transition-colors cursor-pointer rounded-full">
           <img 
             src={savePresetIcon} 
             alt="Save Preset" 

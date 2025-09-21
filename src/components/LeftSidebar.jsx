@@ -55,8 +55,8 @@ const LeftSidebar = ({ onDragStart }) => {
           {navItems.map((item, index) => (
             <button
               key={index}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                item.active ? "bg-green-500" : "bg-[#20242B] hover:bg-gray-500"
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                item.active ? "bg-green-500" : "bg-[#20242B] hover:bg-green-500"
               }`}
               title={item.label}
             >
@@ -73,7 +73,7 @@ const LeftSidebar = ({ onDragStart }) => {
           {bottomNavItems.map((item, index) => (
             <button
               key={index}
-              className="w-12 h-12 flex items-center justify-center transition-colors hover:bg-gray-500 rounded-full"
+              className="w-12 h-12 flex items-center justify-center transition-colors hover:bg-green-500 rounded-full cursor-pointer"
               title={item.label}
             >
               <img
