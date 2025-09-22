@@ -54,9 +54,11 @@ function App() {
 
           {/* Table Monitors */}
           <div className="space-y-4">
-            <TableMonitor chartImage={chartImage} />
-            <TableMonitor chartImage={linechartImage} />
+            <TableMonitor title="Table Monitors A" height={500} maxTiles={4} />
+            <TableMonitor title="Table Monitors B" height={500} maxTiles={4} />
+            <TableMonitor title="Table Monitors C" height={500} maxTiles={4} />
           </div>
+
         </div>
       </div>
 

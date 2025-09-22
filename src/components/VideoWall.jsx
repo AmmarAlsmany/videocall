@@ -34,6 +34,10 @@ const VideoWall = ({
       <div
         ref={canvasRef}
         className="flex-1 border border-gray-300 rounded-xl p-4 relative overflow-hidden"
+        style={{
+          isolation: 'isolate',
+          contain: 'layout style paint'
+        }}
         onDragOver={onDragOver}
         onDrop={onDrop}
         onPointerDown={onPointerDown}
