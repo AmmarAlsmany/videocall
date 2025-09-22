@@ -66,6 +66,14 @@ export const useDragAndDrop = () => {
   const handleDrop = async (e) => {
     e.preventDefault();
     if (!draggedImage) return;
+    
+    // Check if maximum 4 images limit is reached
+    if (droppedImages.length >= 4) {
+      alert("Maximum 4 images allowed on the video wall. Please remove an image before adding a new one.");
+      setDraggedImage(null);
+      return;
+    }
+    
     const rect = getCanvasRect();
     if (!rect) return;
 
