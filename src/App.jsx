@@ -14,9 +14,11 @@ function App() {
     draggedImage,
     droppedImages,
     selectedId,
+    quadMode,
     canvasRef,
     setDroppedImages,
     setSelectedId,
+    setQuadMode,
     handleDragStart,
     handleDragOver,
     handleDrop,
@@ -38,10 +40,12 @@ function App() {
 
         <div className="flex-1 rounded-lg flex flex-col">
           {/* Video Wall */}
-          <VideoWall 
+          <VideoWall
             canvasRef={canvasRef}
             droppedImages={droppedImages}
             selectedId={selectedId}
+            quadMode={quadMode}
+            setQuadMode={setQuadMode}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onPointerDown={() => setSelectedId(null)}
@@ -54,9 +58,9 @@ function App() {
 
           {/* Table Monitors */}
           <div className="space-y-4">
-            <TableMonitor title="Table Monitors A" height={500} maxTiles={4} />
-            <TableMonitor title="Table Monitors B" height={500} maxTiles={4} />
-            <TableMonitor title="Table Monitors C" height={500} maxTiles={4} />
+            <TableMonitor title="Table Monitors A" maxTiles={4} monitorId="monitor-a" />
+            <TableMonitor title="Table Monitors B" maxTiles={4} monitorId="monitor-b" />
+            <TableMonitor title="Table Monitors C" maxTiles={4} monitorId="monitor-c" />
           </div>
 
         </div>

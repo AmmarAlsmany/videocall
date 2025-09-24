@@ -7,13 +7,15 @@ import upArrowIcon from '../assets/uparrow.png';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { CornerHandle, SideHandle } from './ResizeHandles';
 
-const TableMonitor = ({ title = "Table Monitors", height = 350, maxTiles = 4 }) => {
+const TableMonitor = ({ title = "Table Monitors", height = 350, maxTiles = 4, monitorId = "default" }) => {
   const {
     canvasRef,
     droppedImages,
     selectedId,
+    quadMode,
     setDroppedImages,
     setSelectedId,
+    setQuadMode,
     handleDragOver,
     handleDrop,
     startMove,
@@ -24,11 +26,33 @@ const TableMonitor = ({ title = "Table Monitors", height = 350, maxTiles = 4 }) 
   return (
     <div className="bg-white rounded-xl p-4">
       <div className="flex justify-between items-center mb-2">
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
           <img src={powerButtonIcon} alt="Power" className="img-fluid cursor-pointer" />
           <img src={largeScreenIcon} alt="Large Screen" className="img-fluid cursor-pointer" />
           <img src={downArrowIcon} alt="Down Arrow" className="img-fluid cursor-pointer" />
           <img src={upArrowIcon} alt="Up Arrow" className="img-fluid cursor-pointer" />
+
+          {/* Quad Mode Toggle */}
+          <button
+            onClick={() => {
+              console.log(`🎛️ Toggling quad mode for ${title}:`, !quadMode);
+              setQuadMode(!quadMode);
+            }}
+            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              quadMode
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            title="Toggle quad split mode"
+          >
+            {quadMode ? '4-Split ON' : '4-Split OFF'}
+          </button>
+
+          {quadMode && (
+            <span className="text-xs text-gray-500">
+              Auto 1/4 positioning
+            </span>
+          )}
         </div>
         <div className="text-right">
           <h3 className="text-[#A3A5A7] text-lg font-bold">{title}</h3>
@@ -40,8 +64,8 @@ const TableMonitor = ({ title = "Table Monitors", height = 350, maxTiles = 4 }) 
       <div
         ref={canvasRef}
         className="border border-gray-300 rounded-xl p-4 relative overflow-hidden"
-        style={{ 
-          height,
+        style={{
+          aspectRatio: '16/9',
           isolation: 'isolate',
           contain: 'layout style paint'
         }}

@@ -3,26 +3,55 @@ import powerButtonIcon from '../assets/powerbutton.png';
 import largeScreenIcon from '../assets/largescreen.png';
 import { CornerHandle, SideHandle } from './ResizeHandles';
 
-const VideoWall = ({ 
-  canvasRef, 
-  droppedImages, 
-  selectedId, 
-  onDragOver, 
-  onDrop, 
-  onPointerDown, 
-  startMove, 
-  startResizeCorner, 
+const VideoWall = ({
+  canvasRef,
+  droppedImages,
+  selectedId,
+  quadMode,
+  setQuadMode,
+  onDragOver,
+  onDrop,
+  onPointerDown,
+  startMove,
+  startResizeCorner,
   startResizeSide,
   setDroppedImages,
   setSelectedId
 }) => {
   return (
-    <div className="h-[500px] bg-white rounded-xl mb-4 p-4 flex flex-col">
+    <div className="bg-white rounded-xl mb-4 p-4 flex flex-col" style={{ aspectRatio: '16/9' }}>
       <div className="flex justify-between items-center mb-2">
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
           <img src={powerButtonIcon} alt="Power" className="img-fluid cursor-pointer" />
           <img src={largeScreenIcon} alt="Large Screen" className="img-fluid cursor-pointer" />
-          
+
+          {/* Quad Mode Toggle */}
+          <button
+            onClick={() => {
+              console.log('🎛️ Toggling quad mode:', !quadMode);
+              setQuadMode(!quadMode);
+            }}
+            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              quadMode
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            title="Toggle quad split mode"
+          >
+            {quadMode ? '4-Split ON' : '4-Split OFF'}
+          </button>
+
+          {quadMode && (
+            <span className="text-xs text-gray-500">
+              Auto 1/4 positioning - Resizable
+            </span>
+          )}
+
+          {!quadMode && (
+            <span className="text-xs text-gray-500">
+              Free positioning - Full resize
+            </span>
+          )}
         </div>
         <div className="text-right">
           <h3 className="text-[#A3A5A7] text-lg font-bold">Video Wall</h3>
