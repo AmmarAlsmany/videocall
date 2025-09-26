@@ -8,7 +8,8 @@ export const useDragAndDrop = () => {
 
   // session refs to avoid stale closures
   const movingRef = useRef(null);   // { id, grabOffset:{dx,dy} }
-  const resizingRef = useRef(null); // { id, type:'corner'|'side', edge|corner, center, startSize:{w,h}, aspect, nat:{w,h} }
+  const resizingRef = useRef(null); // { id, type:'corner'|'side', edge|corner, center, startSize:{w,h} }
+  const animationFrameRef = useRef(null); // For smooth resizing
 
   /** ===== Utils ===== **/
   const getCanvasRect = () => canvasRef.current?.getBoundingClientRect();
@@ -26,9 +27,9 @@ export const useDragAndDrop = () => {
     };
   };
 
-  const clampSizeWithAspect = (center, size, nat) => {
-    let w = Math.min(size.w, nat.w);
-    let h = Math.min(size.h, nat.h);
+  const clampSizeFreeform = (center, size) => {
+    let w = size.w;
+    let h = size.h;
     w = Math.max(w, MIN_W);
     h = Math.max(h, MIN_H);
     const rect = getCanvasRect();
@@ -40,9 +41,6 @@ export const useDragAndDrop = () => {
     }
     return { w, h };
   };
-
-  const keepAspectFromWidth = (w, aspect) => ({ w, h: Math.round(w / aspect) });
-  const keepAspectFromHeight = (h, aspect) => ({ w: Math.round(h * aspect), h });
 
   /** ===== Drag from sources ===== **/
   // const handleDragStart = (e, imageData) => {
@@ -205,7 +203,7 @@ export const useDragAndDrop = () => {
     window.removeEventListener('pointerup', endMove);
   };
 
-  /** ===== Resize (corners + sides, aspect always kept) ===== **/
+  /** ===== Resize (corners + sides, free-form like Paint) ===== **/
   const startResizeCorner = (e, id, corner) => {
     e.preventDefault(); e.stopPropagation();
     const img = droppedImages.find((d) => d.id === id);
@@ -216,8 +214,6 @@ export const useDragAndDrop = () => {
       corner, // 'nw'|'ne'|'sw'|'se'
       center: { ...img.position },
       startSize: { ...img.size },
-      aspect: img.aspect,
-      nat: img.nat,
     };
     window.addEventListener('pointermove', onResizeMove);
     window.addEventListener('pointerup', endResize);
@@ -233,8 +229,6 @@ export const useDragAndDrop = () => {
       edge, // 'n'|'s'|'e'|'w'
       center: { ...img.position },
       startSize: { ...img.size },
-      aspect: img.aspect,
-      nat: img.nat,
     };
     window.addEventListener('pointermove', onResizeMove);
     window.addEventListener('pointerup', endResize);
@@ -243,44 +237,117 @@ export const useDragAndDrop = () => {
   const onResizeMove = (e) => {
     const s = resizingRef.current;
     if (!s) return;
-    const rect = getCanvasRect();
-    if (!rect) return;
-    const px = e.clientX - rect.left;
-    const py = e.clientY - rect.top;
+    
+    // Cancel previous animation frame for smooth performance
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    // Use requestAnimationFrame for smooth resizing
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const rect = getCanvasRect();
+      if (!rect) return;
+      
+      // Get mouse position relative to canvas with precision
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Clamp mouse position to canvas bounds with padding
+      const padding = 2; // Small padding to prevent edge cases
+      const clampedMouseX = Math.max(padding, Math.min(mouseX, rect.width - padding));
+      const clampedMouseY = Math.max(padding, Math.min(mouseY, rect.height - padding));
 
-    setDroppedImages((prev) =>
-      prev.map((img) => {
-        if (img.id !== s.id) return img;
+      setDroppedImages((prev) =>
+        prev.map((img) => {
+          if (img.id !== s.id) return img;
 
-        let center = { ...s.center };
-        let w = img.size.w;
-        let h = img.size.h;
+          // Get initial edges from start position
+          const startLeft = s.center.x - s.startSize.w / 2;
+          const startRight = s.center.x + s.startSize.w / 2;
+          const startTop = s.center.y - s.startSize.h / 2;
+          const startBottom = s.center.y + s.startSize.h / 2;
 
-        if (s.type === 'corner') {
-          const halfW = Math.abs(px - center.x);
-          let next = keepAspectFromWidth(Math.max(MIN_W, Math.round(halfW * 2)), s.aspect);
-          next = clampSizeWithAspect(center, next, s.nat);
-          w = next.w; h = next.h;
-        } else {
-          if (s.edge === 'e' || s.edge === 'w') {
-            const halfW = Math.abs(px - center.x);
-            let next = keepAspectFromWidth(Math.max(MIN_W, Math.round(halfW * 2)), s.aspect);
-            next = clampSizeWithAspect(center, next, s.nat);
-            w = next.w; h = next.h;
+          let newLeft = startLeft;
+          let newRight = startRight;
+          let newTop = startTop;
+          let newBottom = startBottom;
+
+          if (s.type === 'corner') {
+            // Professional corner resizing with proper edge handling
+            switch (s.corner) {
+              case 'se': // Southeast: drag bottom-right corner
+                newRight = clampedMouseX;
+                newBottom = clampedMouseY;
+                break;
+              case 'sw': // Southwest: drag bottom-left corner
+                newLeft = clampedMouseX;
+                newBottom = clampedMouseY;
+                break;
+              case 'ne': // Northeast: drag top-right corner
+                newRight = clampedMouseX;
+                newTop = clampedMouseY;
+                break;
+              case 'nw': // Northwest: drag top-left corner
+                newLeft = clampedMouseX;
+                newTop = clampedMouseY;
+                break;
+            }
           } else {
-            const halfH = Math.abs(py - center.y);
-            let next = keepAspectFromHeight(Math.max(MIN_H, Math.round(halfH * 2)), s.aspect);
-            next = clampSizeWithAspect(center, next, s.nat);
-            w = next.w; h = next.h;
+            // Professional side resizing with single-axis movement
+            switch (s.edge) {
+              case 'e': // East: drag right edge
+                newRight = clampedMouseX;
+                break;
+              case 'w': // West: drag left edge
+                newLeft = clampedMouseX;
+                break;
+              case 's': // South: drag bottom edge
+                newBottom = clampedMouseY;
+                break;
+              case 'n': // North: drag top edge
+                newTop = clampedMouseY;
+                break;
+            }
           }
-        }
 
-        return { ...img, position: center, size: { w, h } };
-      })
-    );
+          // Ensure minimum size constraints with smooth scaling
+          const newWidth = Math.max(MIN_W, Math.round(newRight - newLeft));
+          const newHeight = Math.max(MIN_H, Math.round(newBottom - newTop));
+
+          // Calculate new center position with precision
+          const newCenterX = (newLeft + newRight) / 2;
+          const newCenterY = (newTop + newBottom) / 2;
+
+          // Apply canvas boundary constraints with smooth clamping
+          const halfWidth = newWidth / 2;
+          const halfHeight = newHeight / 2;
+          
+          const constrainedCenterX = Math.max(
+            halfWidth, 
+            Math.min(newCenterX, rect.width - halfWidth)
+          );
+          const constrainedCenterY = Math.max(
+            halfHeight, 
+            Math.min(newCenterY, rect.height - halfHeight)
+          );
+
+          return {
+            ...img,
+            position: { x: constrainedCenterX, y: constrainedCenterY },
+            size: { w: newWidth, h: newHeight }
+          };
+        })
+      );
+    });
   };
 
   const endResize = () => {
+    // Clean up animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
     resizingRef.current = null;
     window.removeEventListener('pointermove', onResizeMove);
     window.removeEventListener('pointerup', endResize);
@@ -300,10 +367,16 @@ export const useDragAndDrop = () => {
 
   useEffect(() => {
     return () => {
+      // Clean up all event listeners
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', endMove);
       window.removeEventListener('pointermove', onResizeMove);
       window.removeEventListener('pointerup', endResize);
+      
+      // Clean up animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, []);
 

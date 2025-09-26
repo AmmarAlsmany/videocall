@@ -45,9 +45,16 @@ export const useDragAndDrop = () => {
   const keepAspectFromHeight = (h, aspect) => ({ w: Math.round(h * aspect), h });
 
   /** ===== Drag from sources ===== **/
+  // const handleDragStart = (e, imageData) => {
+  //   setDraggedImage(imageData);
+  //   e.dataTransfer.effectAllowed = 'move';
+  // };
+  // replace your current handleDragStart with this:
   const handleDragStart = (e, imageData) => {
-    setDraggedImage(imageData);
+    setDraggedImage(imageData);              // keep (helps VideoWall in App)
     e.dataTransfer.effectAllowed = 'move';
+    // NEW: also stash payload in dataTransfer so OTHER canvases can read it
+    e.dataTransfer.setData('application/x-drag-image', JSON.stringify(imageData));
   };
 
   const handleDragOver = (e) => {
@@ -63,49 +70,104 @@ export const useDragAndDrop = () => {
       im.src = src;
     });
 
+  // const handleDrop = async (e) => {
+  //   e.preventDefault();
+  //   if (!draggedImage) return;
+    
+  //   // Check if maximum 4 images limit is reached
+  //   if (droppedImages.length >= 4) {
+  //     alert("Maximum 4 images allowed on the video wall. Please remove an image before adding a new one.");
+  //     setDraggedImage(null);
+  //     return;
+  //   }
+    
+  //   const rect = getCanvasRect();
+  //   if (!rect) return;
+
+  //   const x = e.clientX - rect.left;
+  //   const y = e.clientY - rect.top;
+
+  //   const nat = await readNaturalSize(draggedImage.src);
+  //   const aspect = nat.w / nat.h;
+
+  //   let initW = Math.min(160, nat.w);
+  //   let initH = Math.round(initW / aspect);
+  //   if (initH > nat.h) {
+  //     initH = Math.min(100, nat.h);
+  //     initW = Math.round(initH * aspect);
+  //   }
+
+  //   const center = clampCenter({ x, y }, { w: initW, h: initH });
+  //   const newImage = {
+  //     ...draggedImage,
+  //     id: Date.now(),
+  //     position: center,
+  //     size: { w: initW, h: initH },
+  //     aspect,
+  //     nat,
+  //     name: draggedImage.name,
+  //   };
+
+  //   setDroppedImages((prev) => [...prev, newImage]);
+  //   setDraggedImage(null);
+  //   setSelectedId(newImage.id);
+  // };
   const handleDrop = async (e) => {
     e.preventDefault();
-    if (!draggedImage) return;
-    
-    // Check if maximum 4 images limit is reached
+  
+    // NEW: try to read payload from dataTransfer (works across components)
+    let payload = draggedImage;
+    if (!payload) {
+      try {
+        const raw = e.dataTransfer.getData('application/x-drag-image');
+        if (raw) payload = JSON.parse(raw);
+      } catch (_) {}
+    }
+    if (!payload) return;
+  
+    // OPTIONAL: per-canvas limit (leave your alert text as-is or customize)
     if (droppedImages.length >= 4) {
       alert("Maximum 4 images allowed on the video wall. Please remove an image before adding a new one.");
       setDraggedImage(null);
       return;
     }
-    
+  
     const rect = getCanvasRect();
     if (!rect) return;
-
+  
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
-    const nat = await readNaturalSize(draggedImage.src);
+  
+    const nat = await readNaturalSize(payload.src);
     const aspect = nat.w / nat.h;
-
+  
     let initW = Math.min(160, nat.w);
     let initH = Math.round(initW / aspect);
     if (initH > nat.h) {
       initH = Math.min(100, nat.h);
       initW = Math.round(initH * aspect);
     }
-
+  
     const center = clampCenter({ x, y }, { w: initW, h: initH });
     const newImage = {
-      ...draggedImage,
+      ...payload,
       id: Date.now(),
       position: center,
       size: { w: initW, h: initH },
       aspect,
       nat,
-      name: draggedImage.name,
+      name: payload.name,
     };
-
+  
     setDroppedImages((prev) => [...prev, newImage]);
     setDraggedImage(null);
     setSelectedId(newImage.id);
   };
 
+  
+
+
+  
   /** ===== Move ===== **/
   const startMove = (e, id) => {
     e.stopPropagation();
